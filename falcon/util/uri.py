@@ -297,20 +297,6 @@ def parse_query_string(query_string, keep_blank_qs_values=False):
                 params[k] = [old_value, v]
 
         else:
-            if ',' in v:
-                # NOTE(kgriffs): Falcon supports a more compact form of
-                # lists, in which the elements are comma-separated and
-                # assigned to a single param instance. If it turns out that
-                # very few people use this, it can be deprecated at some
-                # point.
-                v = v.split(',')
-
-                if not keep_blank_qs_values:
-                    # NOTE(kgriffs): Normalize the result in the case that
-                    # some elements are empty strings, such that the result
-                    # will be the same for 'foo=1,,3' as 'foo=1&foo=&foo=3'.
-                    v = [element for element in v if element]
-
             params[k] = v
 
     return params

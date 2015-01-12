@@ -134,6 +134,8 @@ class HTTPError(Exception):
 
         obj = obj_type()
 
+        obj['status'] = 'Error'
+
         if self.title is not None:
             obj['title'] = self.title
 
