@@ -255,9 +255,7 @@ class Request(object):
         # PERF(kgriffs): Technically, we should spend a few more
         # cycles and parse the content type for real, but
         # this heuristic will work virtually all the time.
-        if (self.content_type is not None and
-                'application/x-www-form-urlencoded' in self.content_type):
-            self._parse_form_urlencoded()
+        self._parse_form_urlencoded()
 
     # ------------------------------------------------------------------------
     # Properties
