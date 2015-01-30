@@ -169,6 +169,7 @@ class Request(object):
         '_cached_headers',
         '_cached_uri',
         '_cached_relative_uri',
+        '_body',
         'content_type',
         'env',
         'method',
@@ -201,6 +202,9 @@ class Request(object):
         self._wsgierrors = env['wsgi.errors']
         self.stream = env['wsgi.input']
         self.method = env['REQUEST_METHOD']
+
+        # Set once we read from self.stream
+        self._body = None
 
         # Normalize path
         path = env['PATH_INFO']
@@ -889,12 +893,13 @@ class Request(object):
         # content length will only ever be read once per
         # request in most cases.
         body = self.stream.read()
+        self._body = body
 
         # NOTE(kgriffs): According to http://goo.gl/6rlcux the
         # body should be US-ASCII. Enforcing this also helps
         # catch malicious input.
         try:
-            body = body.decode('ascii')
+            body = body.decode('utf8')
         except UnicodeDecodeError:
             body = None
             self.log_error('Non-ASCII characters found in form body '
