@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from datetime import datetime
+from base64 import b64decode
 
 try:
     # NOTE(kgrifs): In Python 2.6 and 2.7, socket._fileobject is a
@@ -189,6 +190,7 @@ class Request(object):
         global _maybe_wrap_wsgi_stream
 
         self.env = env
+        print env
         self.options = options if options else RequestOptions()
 
         if self.context_type is None:
@@ -259,7 +261,10 @@ class Request(object):
         # PERF(kgriffs): Technically, we should spend a few more
         # cycles and parse the content type for real, but
         # this heuristic will work virtually all the time.
-        self._parse_form_urlencoded()
+        if self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64':
+            self._parse_base64()
+        else:
+            self._parse_form_urlencoded()
 
     # ------------------------------------------------------------------------
     # Properties
@@ -882,6 +887,30 @@ class Request(object):
             # NOTE(kgriffs): The content-length header was specified,
             # but it had an invalid value.
             pass
+    
+    def _parse_base64(self):
+        """
+        When content is encoded as base64.
+        """
+        body = b64decode(self.stream.read())
+        self._body = body
+
+        try:
+            body = body.decode('utf8')
+        except UnicodeDecodeError:
+            body = None
+            self.log_error('Non-ASCII characters found in form body '
+                           'with Content-Type of '
+                           'application/x-www-form-urlencoded. Body '
+                           'will be ignored.')
+
+        if body:
+            extra_params = uri.parse_query_string(
+                uri.decode(body),
+                keep_blank_qs_values=self.options.keep_blank_qs_values,
+            )
+
+            self._params.update(extra_params)
 
     def _parse_form_urlencoded(self):
         # NOTE(kgriffs): This assumes self.stream has been patched
