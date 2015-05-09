@@ -190,7 +190,6 @@ class Request(object):
         global _maybe_wrap_wsgi_stream
 
         self.env = env
-        print env
         self.options = options if options else RequestOptions()
 
         if self.context_type is None:
@@ -261,10 +260,7 @@ class Request(object):
         # PERF(kgriffs): Technically, we should spend a few more
         # cycles and parse the content type for real, but
         # this heuristic will work virtually all the time.
-        if self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64':
-            self._parse_base64()
-        else:
-            self._parse_form_urlencoded()
+        self._parse_form_urlencoded()
 
     # ------------------------------------------------------------------------
     # Properties
@@ -888,30 +884,6 @@ class Request(object):
             # but it had an invalid value.
             pass
     
-    def _parse_base64(self):
-        """
-        When content is encoded as base64.
-        """
-        body = b64decode(self.stream.read())
-        self._body = body
-
-        try:
-            body = body.decode('utf8')
-        except UnicodeDecodeError:
-            body = None
-            self.log_error('Non-ASCII characters found in form body '
-                           'with Content-Type of '
-                           'application/x-www-form-urlencoded. Body '
-                           'will be ignored.')
-
-        if body:
-            extra_params = uri.parse_query_string(
-                uri.decode(body),
-                keep_blank_qs_values=self.options.keep_blank_qs_values,
-            )
-
-            self._params.update(extra_params)
-
     def _parse_form_urlencoded(self):
         # NOTE(kgriffs): This assumes self.stream has been patched
         # above in the case of wsgiref, so that self.content_length
@@ -941,8 +913,12 @@ class Request(object):
                 uri.decode(body),
                 keep_blank_qs_values=self.options.keep_blank_qs_values,
             )
-
-            self._params.update(extra_params)
+            if self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64':
+                # Decode values.
+                for key, value in extra_params.items():
+                    self._params[key] = b64decode(value)
+            else:
+                self._params.update(extra_params)
 
 
 # PERF: To avoid typos and improve storage space and speed over a dict.
