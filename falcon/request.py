@@ -913,9 +913,11 @@ class Request(object):
                 uri.decode(body),
                 keep_blank_qs_values=self.options.keep_blank_qs_values,
             )
+            if 'text' in extra_params and\
+                    (self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64' or
+                            self.env.get('HTTP_X_CONTENT_TRANSFER_ENCODING') == 'base64'):
+                extra_params['text'] = b64decode(extra_params['text']).decode('utf8')
             self._params.update(extra_params)
-            if 'text' in self._params and self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64':
-                self._params['text'] = b64decode(self.params['text']).decode('utf8')
 
 
 # PERF: To avoid typos and improve storage space and speed over a dict.
