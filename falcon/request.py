@@ -916,7 +916,7 @@ class Request(object):
             if 'text' in extra_params and\
                     (self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64' or
                             self.env.get('HTTP_X_CONTENT_TRANSFER_ENCODING') == 'base64'):
-                extra_params['text'] = b64decode(extra_params['text']).decode('utf8')
+                extra_params['text'] = b64decode(extra_params['text'].replace(' ', '+')).decode('utf8')
             self._params.update(extra_params)
 
 
