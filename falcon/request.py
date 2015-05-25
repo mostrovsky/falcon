@@ -917,9 +917,12 @@ class Request(object):
                     (self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64' or
                             self.env.get('HTTP_X_CONTENT_TRANSFER_ENCODING') == 'base64'):
                 
-                decoded_text = b64decode(extra_params['text'].replace(' ', '+'))
                 try:
+                    decoded_text = b64decode(extra_params['text'].replace(' ', '+'))
                     extra_params['text'] = decoded_text.decode('utf8')
+                except TypeError:
+                    # Thrown when base64 couldn't decode properly.
+                    raise HTTPInvalidParam('Value was not properly base64 encoded', 'text')
                 except UnicodeDecodeError:
                     extra_params['text'] = decoded_text.decode('latin1')
 
