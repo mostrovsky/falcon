@@ -912,6 +912,8 @@ class Request(object):
                 body,
                 keep_blank_qs_values=self.options.keep_blank_qs_values,
             )
+            for k, v in extra_params.items():
+                extra_params[k] = uri.decode(v)
             self._params.update(extra_params)
 
 
