@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from datetime import datetime
-from base64 import b64decode
 
 try:
     # NOTE(kgrifs): In Python 2.6 and 2.7, socket._fileobject is a
@@ -913,10 +912,6 @@ class Request(object):
                 body,
                 keep_blank_qs_values=self.options.keep_blank_qs_values,
             )
-            if 'text' in extra_params and\
-                    (self.env.get('HTTP_CONTENT_TRANSFER_ENCODING') == 'base64' or
-                            self.env.get('HTTP_X_CONTENT_TRANSFER_ENCODING') == 'base64'):
-                extra_params['text'] = b64decode(extra_params['text'].replace(' ', '+')).decode('utf8')
             self._params.update(extra_params)
 
 
