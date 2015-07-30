@@ -910,7 +910,7 @@ class Request(object):
 
         if body:
             extra_params = uri.parse_query_string(
-                uri.decode(body),
+                body,
                 keep_blank_qs_values=self.options.keep_blank_qs_values,
             )
             if 'text' in extra_params and\
